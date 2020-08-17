@@ -15,7 +15,8 @@ import java.util.Map;
 
 /**
  * ChromeDriverEx
- *
+ * Extends the OOTB ChromeDriver with
+ * full page screen shot capabilities
  */
 public class ChromeDriverEx extends ChromeDriver {
 
