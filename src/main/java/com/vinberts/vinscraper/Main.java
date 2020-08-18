@@ -1,17 +1,17 @@
 package com.vinberts.vinscraper;
 
-import com.google.common.collect.ImmutableMap;
-import com.vinberts.vinscraper.utils.ChromeDriverEx;
+import com.vinberts.vinscraper.utils.MyChromeDriver;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
 import com.vinberts.vinscraper.utils.UrbanDictionaryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeOptions;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
 
 /**
  *
@@ -21,60 +21,77 @@ public class Main {
 
     public static void main(String[] args) {
         SystemPropertyLoader.loadPropValues();
-        int pagesToVisit = 100;
-        int currentPage = 101;
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors");
-        options.addArguments("disable-infobars");
-        options.setExperimentalOption("useAutomationExtension", false);
-        try {
-            ChromeDriverEx driver = new ChromeDriverEx(options);
-            String[] blocked = {"*pubmatic.com*", "*facebook*", "*adroll.com*", "*doubleclick.net*", "*adform.net*", "*rubiconproject.com*", "*quantserve.com*", "*google-analytics*", "*moatads.com*", "*serverbid.com*"};
-            driver.executeCdpCommand("Network.setUserAgentOverride", ImmutableMap.of ( "userAgent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36"));
-            driver.executeCdpCommand("Network.setBlockedURLs", ImmutableMap.of("urls", blocked));
+        loadDefinitionsByAlpha();
+//                int pagesToVisit = 3;
+//                int currentPage = 1;
+//        loadDefinitionsByPage(pagesToVisit, currentPage);
+    }
 
-            // load first page
-            String pageToLoad = String.format("https://www.urbandictionary.com/?page=%d", currentPage);
-            driver.get(pageToLoad);
+    private static void loadDefinitionsByAlpha() {
+        Map<String, String> linkedMap = new LinkedHashMap<>();
+        MyChromeDriver chromeDriver = MyChromeDriver.getInstance();
+        List<String> list = Arrays.asList("A", "B", "C",
+                "D", "E", "F", "G", "H", "I", "J",
+                "K", "L", "M", "N", "O", "P", "Q",
+                "R", "S", "T", "U", "V", "W", "X",
+                "Y", "Z");
+        for (String letter: list) {
+            int pagesToVisit = 800;
+            int currentPage = 12;
+            String pageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d", letter, currentPage);
+            chromeDriver.getDriver().get(pageToLoad);
+            WebElement listOfWords = chromeDriver.getDriver().findElement(By.className("no-bullet"));
+            List<WebElement> anchors = listOfWords.findElements(By.tagName("a"));
+            log.info(String.format("Found %d words on page %d for letter %s", anchors.size(), currentPage, letter));
+            loadToLinkedMap(linkedMap, anchors);
+            loadLinkedMapToDB(linkedMap);
+            linkedMap.clear();
             currentPage++;
             try {
-                Thread.sleep(1500);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 log.error("InterruptedException thread exception", e);
             }
-
             for (int i = pagesToVisit; i >= 1; i--) {
-                log.info("loading page " + currentPage);
-                driver.navigate().to(String.format("https://www.urbandictionary.com/?page=%d", currentPage));
+                String nextPageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d", letter, currentPage);
+                chromeDriver.getDriver().navigate().to(nextPageToLoad);
+                WebElement listWords = chromeDriver.getDriver().findElement(By.className("no-bullet"));
+                List<WebElement> wordAnchors = listWords.findElements(By.tagName("a"));
+                log.info(String.format("Found %d words on page %d for letter %s", wordAnchors.size(), currentPage, letter));
                 currentPage++;
-                List<WebElement> elements = driver.findElements(By.className("def-panel"));
-                log.info("Found defs: " + elements.size());
-                for (WebElement element: elements) {
-                    UrbanDictionaryUtils.attemptSaveNewDefinition(element);
-                }
+                loadToLinkedMap(linkedMap, wordAnchors);
+                loadLinkedMapToDB(linkedMap);
+                linkedMap.clear();
                 try {
-                    Thread.sleep(1500);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     log.error("InterruptedException thread exception", e);
                 }
             }
-
-            //File screenshot = driver.getFullScreenshotAs(OutputType.FILE);
-            //FileUtils.copyFile(screenshot, new File("screenshot.png"));
-            log.info("finished");
-            //driver.close();
-            driver.quit();
-        } catch (WebDriverException e) {
-            System.err.println("finished with error");
-            System.err.println(e);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } finally {
-            System.exit(0);
         }
     }
+
+    private static void loadLinkedMapToDB(final Map<String, String> linkedMap) {
+        MyChromeDriver chromeDriver = MyChromeDriver.getInstance();
+        for (Map.Entry<String, String> entry : linkedMap.entrySet()) {
+            String link = entry.getValue();
+            chromeDriver.getDriver().navigate().to(link);
+            List<WebElement> defPanels = chromeDriver.getDriver().findElements(By.className("def-panel"));
+            UrbanDictionaryUtils.attemptSaveNewDefinition(defPanels.get(0));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                log.error("InterruptedException thread exception", e);
+            }
+        }
+    }
+
+    private static void loadToLinkedMap(final Map<String, String> linkedMap, final List<WebElement> anchors) {
+        for (WebElement element: anchors) {
+            String word = element.getText();
+            linkedMap.put(word, element.getAttribute("href"));
+        }
+    }
+
+
 }

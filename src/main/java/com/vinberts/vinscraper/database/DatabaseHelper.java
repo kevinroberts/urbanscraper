@@ -6,6 +6,9 @@ import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -39,5 +42,20 @@ public class DatabaseHelper {
         Optional<Definition> gifOptional = identifierLoadAccess.loadOptional(id);
         session.close();
         return gifOptional;
+    }
+
+    public static Optional<Definition> getDefinitionByWord(String word) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager manager = session.getEntityManagerFactory().createEntityManager();
+
+        String hql = "SELECT d FROM Definition d WHERE d.word = ?1";
+        Query query = manager.createQuery(hql).setParameter(1, word);
+        List results = query.getResultList();
+        session.close();
+        if (results.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of((Definition)results.get(0));
+        }
     }
 }

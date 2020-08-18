@@ -26,7 +26,7 @@ public class Definition implements Serializable {
     @Column(nullable = false, length = 800)
     private String word;
 
-    @Column(nullable = false, length = 3000)
+    @Column(nullable = false, length = 5000)
     private String meaning;
 
     @Column(nullable = false, length = 3000)

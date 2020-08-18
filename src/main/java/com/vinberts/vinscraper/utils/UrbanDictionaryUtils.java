@@ -6,6 +6,7 @@ import com.vinberts.vinscraper.database.models.Definition;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import java.text.ParseException;
@@ -13,11 +14,12 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- *
+ * UrbanDictionaryUtils
  */
 @Slf4j
 public class UrbanDictionaryUtils {
@@ -91,6 +93,50 @@ public class UrbanDictionaryUtils {
             }
         } else {
             log.info("Definition already scraped for word: " + definitionCheck.get().getWord());
+        }
+    }
+
+    public static void loadDefinitionsByPage(int pagesToVisit, int currentPage) {
+        try {
+            MyChromeDriver chromeDriver = MyChromeDriver.getInstance();
+            // load first page
+            String pageToLoad = String.format("https://www.urbandictionary.com/?page=%d", currentPage);
+            chromeDriver.getDriver().get(pageToLoad);
+            loadElementsIntoDB(chromeDriver.getDriver().findElements(By.className("def-panel")));
+            currentPage++;
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                log.error("InterruptedException thread exception", e);
+            }
+            for (int i = pagesToVisit; i >= 1; i--) {
+                log.info("loading page " + currentPage);
+                chromeDriver.getDriver().navigate().to(String.format("https://www.urbandictionary.com/?page=%d", currentPage));
+                currentPage++;
+                loadElementsIntoDB(chromeDriver.getDriver().findElements(By.className("def-panel")));
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    log.error("InterruptedException thread exception", e);
+                }
+            }
+            //File screenshot = driver.getFullScreenshotAs(OutputType.FILE);
+            //FileUtils.copyFile(screenshot, new File("screenshot.png"));
+            log.info("finished");
+            //driver.close();
+            chromeDriver.getDriver().quit();
+        } catch (WebDriverException e) {
+            System.err.println("finished with error");
+            System.err.println(e);
+        } finally {
+            System.exit(0);
+        }
+    }
+
+    public static void loadElementsIntoDB(final List<WebElement> elements) {
+        log.info("Found defs: " + elements.size());
+        for (WebElement element: elements) {
+            UrbanDictionaryUtils.attemptSaveNewDefinition(element);
         }
     }
 }
