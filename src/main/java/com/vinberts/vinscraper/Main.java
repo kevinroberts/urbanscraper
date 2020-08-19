@@ -24,7 +24,8 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        SystemPropertyLoader.checkRequiredPropValues();
+        SystemPropertyLoader.checkAndLoadRequiredPropValues();
+
         //processAlphaLoading(Arrays.asList("C", "D", "E", "F", "G"));
         processQueues(6000);
     }
