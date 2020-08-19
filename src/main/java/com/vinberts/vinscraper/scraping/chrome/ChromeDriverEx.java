@@ -1,4 +1,4 @@
-package com.vinberts.vinscraper.utils;
+package com.vinberts.vinscraper.scraping.chrome;
 
 import com.google.common.collect.ImmutableMap;
 import org.openqa.selenium.OutputType;

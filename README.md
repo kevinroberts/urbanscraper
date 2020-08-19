@@ -1,11 +1,7 @@
 Urban Dictionary Web Scraping exercise
 
-https://www.scrapingbee.com/blog/introduction-to-chrome-headless/
+- urban dictionary scraping via headless chrome
+- scrape definitions to a pg sql database, via processing queue
 
-https://stackoverflow.com/questions/56165801/senddevtoolscommand-in-selenium-4-alpha
+Released under MIT License
 
-Linking Binary 'chromedriver' to '/usr/local/bin/chromedriver'.
-
-
-- urban dictionary scraping
-- scrape definitions to a pg sql database
