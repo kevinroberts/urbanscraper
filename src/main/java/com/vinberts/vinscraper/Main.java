@@ -14,7 +14,6 @@ import com.vinberts.vinscraper.scraping.queues.WordQueueProcessing;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -26,8 +25,8 @@ public class Main {
 
     public static void main(String[] args) {
         SystemPropertyLoader.checkRequiredPropValues();
-        processAlphaLoading(Arrays.asList("C", "D", "E", "F", "G"));
-        //processQueues(1000);
+        //processAlphaLoading(Arrays.asList("C", "D", "E", "F", "G"));
+        processQueues(6000);
     }
 
     private static void processAlphaLoading(List<String> letters) {
