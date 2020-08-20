@@ -43,7 +43,7 @@ public class SystemPropertyLoader {
 
     private static void checkForRequiredEnvVariable(String key) {
         if (!System.getenv().containsKey(key)) {
-            log.warn("Required system env property missing: " + key);
+            log.warn("System env property missing: " + key);
             System.setProperty(CHROME_DRIVER_PATH, getSystemProps().getProperty(CHROME_DRIVER_PATH));
         }
     }

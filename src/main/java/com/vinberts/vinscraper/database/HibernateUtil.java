@@ -11,6 +11,10 @@ import org.hibernate.service.ServiceRegistry;
 
 import java.util.Properties;
 
+import static com.vinberts.vinscraper.utils.SystemPropertyLoader.DATABASE_PASS;
+import static com.vinberts.vinscraper.utils.SystemPropertyLoader.DATABASE_URL;
+import static com.vinberts.vinscraper.utils.SystemPropertyLoader.DATABASE_USERNAME;
+
 /**
  *
  */
@@ -25,9 +29,9 @@ public class HibernateUtil {
                 // Hibernate settings equivalent to hibernate.cfg.xml's properties
                 Properties settings = new Properties();
                 settings.put(Environment.DRIVER, "org.postgresql.Driver");
-                settings.put(Environment.URL, systemProps.get("database_url"));
-                settings.put(Environment.USER, systemProps.get("database_username"));
-                settings.put(Environment.PASS, systemProps.get("database_password"));
+                settings.put(Environment.URL, systemProps.get(DATABASE_URL));
+                settings.put(Environment.USER, systemProps.get(DATABASE_USERNAME));
+                settings.put(Environment.PASS, systemProps.get(DATABASE_PASS));
                 settings.put(Environment.DIALECT, "org.hibernate.dialect.PostgreSQL82Dialect");
                 settings.put(Environment.SHOW_SQL, "false");
                 settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");

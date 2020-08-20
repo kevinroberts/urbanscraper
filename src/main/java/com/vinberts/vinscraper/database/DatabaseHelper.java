@@ -95,6 +95,21 @@ public class DatabaseHelper {
         }
     }
 
+    public static Optional<WordQueue> getWordQueueByWord(String word) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager manager = session.getEntityManagerFactory().createEntityManager();
+
+        String hql = "SELECT q FROM WordQueue q WHERE q.word = ?1";
+        Query query = manager.createQuery(hql).setParameter(1, word);
+        List results = query.getResultList();
+        session.close();
+        if (results.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of((WordQueue)results.get(0));
+        }
+    }
+
     public static boolean updateWordQueue(WordQueue wordQueue) {
         EntityManager manager = null;
         try {

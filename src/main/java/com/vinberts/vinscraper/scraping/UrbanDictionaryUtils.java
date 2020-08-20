@@ -179,7 +179,7 @@ public class UrbanDictionaryUtils {
     public static void loadToDBQueue(final List<WebElement> anchors) {
         for (WebElement element: anchors) {
             String word = element.getText();
-            Optional<Definition> existingWord = DatabaseHelper.getDefinitionByWord(word);
+            Optional<WordQueue> existingWord = DatabaseHelper.getWordQueueByWord(word);
             if (existingWord.isEmpty()) {
                 WordQueue queue = new WordQueue();
                 queue.setWord(word);
