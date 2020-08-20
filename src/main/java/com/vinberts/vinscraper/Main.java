@@ -94,7 +94,6 @@ public class Main {
     }
 
     private static void processAlphaLoading(List<String> letters, List<Integer> startingPages) {
-
         Thread threadOne = new Thread(
                 new AlphaWordLoader(ChromeDriverInstanceOne.getInstance().getDriver(), letters.get(0), startingPages.get(0))
         );
@@ -132,7 +131,7 @@ public class Main {
         int splitSize = queueList.size() / threads;
         List<List<WordQueue>> subSets = Lists.partition(queueList, splitSize);
 
-        for (int i = 0; i <= threads; i++) {
+        for (int i = 0; i < threads; i++) {
             Thread thread = new Thread(
                     new WordQueueProcessing(getNewDriver(i),
                             subSets.get(i)));

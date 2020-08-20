@@ -36,7 +36,7 @@ public class AlphaWordLoader implements Runnable {
         final int pagesToVisit = 800;
         for (int i = pagesToVisit; i >= 1; i--) {
             String nextPageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d",
-                    letterToLoad, currentPage);
+                    letterToLoad.toUpperCase(), currentPage);
             driver.navigate().to(nextPageToLoad);
             WebElement listWords = driver.findElement(By.className("no-bullet"));
             List<WebElement> wordAnchors = listWords.findElements(By.tagName("a"));
