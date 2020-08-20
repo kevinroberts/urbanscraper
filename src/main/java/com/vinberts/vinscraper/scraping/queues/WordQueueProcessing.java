@@ -34,11 +34,15 @@ public class WordQueueProcessing implements Runnable {
                 Thread.currentThread().getName() +
                 " for word queue of size " + wordQueueList.size());
         for (WordQueue queue: wordQueueList) {
-            String link = queue.getUrl();
-            driver.navigate().to(link);
-            List<WebElement> defPanels = driver.findElements(By.className("def-panel"));
-            UrbanDictionaryUtils.attemptSaveNewDefinition(defPanels.get(0));
-            DatabaseHelper.updateWordQueue(queue);
+            try {
+                String link = queue.getUrl();
+                driver.navigate().to(link);
+                List<WebElement> defPanels = driver.findElements(By.className("def-panel"));
+                UrbanDictionaryUtils.attemptSaveNewDefinition(defPanels.get(0));
+                DatabaseHelper.updateWordQueue(queue);
+            } catch (Exception e) {
+                log.error("Exception reached trying to load word in queue " + queue.getWord(), e);
+            }
             try {
                 Thread.sleep(RandomUtils.nextInt(300,500));
             } catch (InterruptedException e) {
