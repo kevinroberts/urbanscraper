@@ -26,7 +26,7 @@ public class Main {
     public static void main(String[] args) {
         SystemPropertyLoader.checkAndLoadRequiredPropValues();
 
-        //processAlphaLoading(Arrays.asList("C", "D", "E", "F", "G"));
+        //processAlphaLoading(Arrays.asList("H", "I", "J", "K", "L"));
         processQueues(6000);
     }
 
