@@ -127,6 +127,7 @@ public class Main {
     private static void processQueues(int limit, int threads) {
 
         List<WordQueue> queueList = DatabaseHelper.getUnprocessedWordQueue(limit);
+        DatabaseHelper.markWordQueueAsInProcess(limit);
         // split list into equal parts
         int splitSize = queueList.size() / threads;
         List<List<WordQueue>> subSets = Lists.partition(queueList, splitSize);

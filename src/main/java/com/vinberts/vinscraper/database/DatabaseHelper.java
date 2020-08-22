@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.NativeQuery;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -68,7 +69,7 @@ public class DatabaseHelper {
         Session session = HibernateUtil.getSessionFactory().openSession();
         EntityManager manager = session.getEntityManagerFactory().createEntityManager();
 
-        String hql = "SELECT q FROM WordQueue q WHERE q.processed = false";
+        String hql = "SELECT q FROM WordQueue q WHERE q.processed = false and q.beingProcessed = false order by q.dateAdded ASC";
         Query query = manager.createQuery(hql);
         query.setMaxResults(limit);
         List results = query.getResultList();
@@ -77,6 +78,32 @@ public class DatabaseHelper {
             return Lists.newArrayList();
         } else {
             return results;
+        }
+    }
+
+    public static boolean markWordQueueAsInProcess(int limit) {
+        Transaction transaction = null;
+        try {
+            Session session = HibernateUtil.getSessionFactory().openSession();
+            transaction = session.beginTransaction();
+            NativeQuery query = session.createNativeQuery(
+                    "UPDATE words_queue " +
+                            "SET being_processed = true " +
+                            " WHERE uuid in (SELECT  uuid " +
+                            "             FROM words_queue " +
+                            "             WHERE processed = false " +
+                            "             ORDER BY date_added asc limit ?1);");
+            query.setParameter(1, limit);
+            query.executeUpdate();
+            transaction.commit();
+            return true;
+
+        } catch (RuntimeException e) {
+            if (Objects.nonNull(transaction)) {
+                transaction.rollback();
+            }
+            log.error("Exception occurred trying to update Queue", e);
+            return false;
         }
     }
 
@@ -116,7 +143,7 @@ public class DatabaseHelper {
             Session session = HibernateUtil.getSessionFactory().openSession();
             manager = session.getEntityManagerFactory().createEntityManager();
             manager.getTransaction().begin();
-            String hql = "UPDATE WordQueue set processed = true " +
+            String hql = "UPDATE WordQueue set processed = true, beingProcessed = false " +
                     "WHERE uuid = :id";
             Query query = manager.createQuery(hql);
             query.setParameter("id", wordQueue.getUuid());

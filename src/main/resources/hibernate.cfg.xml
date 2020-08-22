@@ -38,6 +38,8 @@
         <!-- So for the first time you can set it to create and then next time on-wards you should set it to update.-->
         <property name="hbm2ddl.auto">update</property>
 
+        <property name="hibernate.jdbc.batch_size">20</property>
+
         <mapping class="com.vinberts.vinscraper.database.models.Definition"/>
         <mapping class="com.vinberts.vinscraper.database.models.WordQueue"/>
 
