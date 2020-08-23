@@ -7,6 +7,7 @@ import com.vinberts.vinscraper.scraping.chrome.ChromeDriverEx;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
@@ -39,9 +40,15 @@ public class WordQueueProcessing implements Runnable {
                 driver.navigate().to(link);
                 List<WebElement> defPanels = driver.findElements(By.className("def-panel"));
                 UrbanDictionaryUtils.attemptSaveNewDefinition(defPanels.get(0));
-                DatabaseHelper.updateWordQueue(queue);
-            } catch (Exception e) {
-                log.error("Exception reached trying to load word in queue " + queue.getWord(), e);
+                DatabaseHelper.updateWordQueueProcess(queue, true);
+            } catch (WebDriverException ue) {
+                log.error("Exception reached trying to load word in queue " + queue.getWord(), ue);
+                DatabaseHelper.updateWordQueueProcess(queue, false);
+                try {
+                    Thread.sleep(800);
+                } catch (InterruptedException e2) {
+                    log.error("InterruptedException thread exception", e2);
+                }
             }
             try {
                 Thread.sleep(RandomUtils.nextInt(300,500));

@@ -137,15 +137,16 @@ public class DatabaseHelper {
         }
     }
 
-    public static boolean updateWordQueue(WordQueue wordQueue) {
+    public static boolean updateWordQueueProcess(WordQueue wordQueue, boolean processSuccessful) {
         EntityManager manager = null;
         try {
             Session session = HibernateUtil.getSessionFactory().openSession();
             manager = session.getEntityManagerFactory().createEntityManager();
             manager.getTransaction().begin();
-            String hql = "UPDATE WordQueue set processed = true, beingProcessed = false " +
+            String hql = "UPDATE WordQueue set processed = :process, beingProcessed = false " +
                     "WHERE uuid = :id";
             Query query = manager.createQuery(hql);
+            query.setParameter("process", processSuccessful);
             query.setParameter("id", wordQueue.getUuid());
             query.executeUpdate();
             manager.getTransaction().commit();
