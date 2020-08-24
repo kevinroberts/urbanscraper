@@ -54,7 +54,7 @@ public class WordQueueProcessingCurl implements Runnable {
     }
 
     private boolean attemptSaveNewDefinition(Element element) {
-        if (element.hasAttr("data-defid")) {
+        if (Objects.nonNull(element) && element.hasAttr("data-defid")) {
             final String definitionId = element.attr("data-defid");
 
             Optional<Definition> definitionCheck = DatabaseHelper.getDefinitionById(definitionId);
@@ -130,6 +130,8 @@ public class WordQueueProcessingCurl implements Runnable {
                         ": Definition already scraped for word: "
                         + definitionCheck.get().getWord());
             }
+        } else {
+            log.warn("Could not load word");
         }
         return false;
 
