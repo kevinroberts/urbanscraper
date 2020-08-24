@@ -13,18 +13,18 @@ import java.util.List;
  * AlphaWordLoader
  */
 @Slf4j
-public class AlphaWordLoader implements Runnable {
+public class AlphaWordLoaderWebDriver implements Runnable {
     private final ChromeDriverEx driver;
     private final String letterToLoad;
     private final int startPage;
 
-    public AlphaWordLoader(final ChromeDriverEx driver, final String letterToLoad) {
+    public AlphaWordLoaderWebDriver(final ChromeDriverEx driver, final String letterToLoad) {
         this.driver = driver;
         this.letterToLoad = letterToLoad;
         this.startPage = 1;
     }
 
-    public AlphaWordLoader(final ChromeDriverEx driver, final String letterToLoad, final int startPage) {
+    public AlphaWordLoaderWebDriver(final ChromeDriverEx driver, final String letterToLoad, final int startPage) {
         this.driver = driver;
         this.letterToLoad = letterToLoad;
         this.startPage = startPage;

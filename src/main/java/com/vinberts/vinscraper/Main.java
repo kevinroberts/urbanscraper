@@ -13,7 +13,7 @@ import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceSeven;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceSix;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceThree;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceTwo;
-import com.vinberts.vinscraper.scraping.queues.AlphaWordLoader;
+import com.vinberts.vinscraper.scraping.queues.AlphaWordLoaderCurl;
 import com.vinberts.vinscraper.scraping.queues.WordQueueProcessingCurl;
 import com.vinberts.vinscraper.utils.ConsoleUtil;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
@@ -96,29 +96,29 @@ public class Main {
 
     private static void processAlphaLoading(List<String> letters, List<Integer> startingPages) {
         Thread threadOne = new Thread(
-                new AlphaWordLoader(ChromeDriverInstanceOne.getInstance().getDriver(), letters.get(0), startingPages.get(0))
+                new AlphaWordLoaderCurl(letters.get(0), startingPages.get(0))
         );
         threadOne.start();
         if (letters.size() > 1) {
             Thread threadTwo = new Thread(
-                    new AlphaWordLoader(ChromeDriverInstanceTwo.getInstance().getDriver(), letters.get(1), startingPages.get(1))
+                    new AlphaWordLoaderCurl(letters.get(1), startingPages.get(1))
             );
             threadTwo.start();
             if (letters.size() > 2) {
                 Thread threadThree = new Thread(
-                        new AlphaWordLoader(ChromeDriverInstanceThree.getInstance().getDriver(), letters.get(2), startingPages.get(2))
+                        new AlphaWordLoaderCurl(letters.get(2), startingPages.get(2))
                 );
                 threadThree.start();
             }
             if (letters.size() > 3) {
                 Thread threadFour = new Thread(
-                        new AlphaWordLoader(ChromeDriverInstanceFour.getInstance().getDriver(), letters.get(3), startingPages.get(3))
+                        new AlphaWordLoaderCurl(letters.get(3), startingPages.get(3))
                 );
                 threadFour.start();
             }
             if (letters.size() > 4) {
                 Thread threadFive = new Thread(
-                        new AlphaWordLoader(ChromeDriverInstanceFive.getInstance().getDriver(), letters.get(4), startingPages.get(4))
+                        new AlphaWordLoaderCurl(letters.get(4), startingPages.get(4))
                 );
                 threadFive.start();
             }
