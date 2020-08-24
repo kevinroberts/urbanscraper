@@ -95,33 +95,10 @@ public class Main {
     }
 
     private static void processAlphaLoading(List<String> letters, List<Integer> startingPages) {
-        Thread threadOne = new Thread(
-                new AlphaWordLoaderCurl(letters.get(0), startingPages.get(0))
-        );
-        threadOne.start();
-        if (letters.size() > 1) {
-            Thread threadTwo = new Thread(
-                    new AlphaWordLoaderCurl(letters.get(1), startingPages.get(1))
-            );
-            threadTwo.start();
-            if (letters.size() > 2) {
-                Thread threadThree = new Thread(
-                        new AlphaWordLoaderCurl(letters.get(2), startingPages.get(2))
-                );
-                threadThree.start();
-            }
-            if (letters.size() > 3) {
-                Thread threadFour = new Thread(
-                        new AlphaWordLoaderCurl(letters.get(3), startingPages.get(3))
-                );
-                threadFour.start();
-            }
-            if (letters.size() > 4) {
-                Thread threadFive = new Thread(
-                        new AlphaWordLoaderCurl(letters.get(4), startingPages.get(4))
-                );
-                threadFive.start();
-            }
+        for (int i = 0; i < letters.size(); i++) {
+            Thread thread = new Thread(
+                    new AlphaWordLoaderCurl(letters.get(i), startingPages.get(i)));
+            thread.start();
         }
     }
 
