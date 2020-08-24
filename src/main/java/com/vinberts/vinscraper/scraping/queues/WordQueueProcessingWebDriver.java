@@ -19,12 +19,12 @@ import java.util.List;
  *  chrome headless driver
  */
 @Slf4j
-public class WordQueueProcessing implements Runnable {
+public class WordQueueProcessingWebDriver implements Runnable {
 
     private ChromeDriverEx driver;
     private List<WordQueue> wordQueueList;
 
-    public WordQueueProcessing(final ChromeDriverEx driver, final List<WordQueue> wordQueueList) {
+    public WordQueueProcessingWebDriver(final ChromeDriverEx driver, final List<WordQueue> wordQueueList) {
         this.driver = driver;
         this.wordQueueList = wordQueueList;
     }

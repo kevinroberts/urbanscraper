@@ -5,6 +5,8 @@ import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.lang.reflect.InvocationTargetException;
 
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.USER_AGENT_WINDOWS;
+
 /**
  *
  */
@@ -19,7 +21,7 @@ public interface ChromeDriverInstance {
         String[] blocked = {"*pubmatic.com*", "*facebook*", "*adroll.com*",
                 "*doubleclick.net*", "*adform.net*", "*rubiconproject.com*",
                 "*quantserve.com*", "*google-analytics*", "*moatads.com*", "*serverbid.com*"};
-        driver.executeCdpCommand("Network.setUserAgentOverride", ImmutableMap.of ( "userAgent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36"));
+        driver.executeCdpCommand("Network.setUserAgentOverride", ImmutableMap.of ( "userAgent", USER_AGENT_WINDOWS));
         driver.executeCdpCommand("Network.setBlockedURLs", ImmutableMap.of("urls", blocked));
         return driver;
     }

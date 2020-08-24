@@ -14,7 +14,7 @@ import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceSix;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceThree;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceTwo;
 import com.vinberts.vinscraper.scraping.queues.AlphaWordLoader;
-import com.vinberts.vinscraper.scraping.queues.WordQueueProcessing;
+import com.vinberts.vinscraper.scraping.queues.WordQueueProcessingCurl;
 import com.vinberts.vinscraper.utils.ConsoleUtil;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,8 @@ import java.util.Scanner;
 
 
 /**
- *
+ * Main App
+ * entry point to Urbanscraper
  */
 @Slf4j
 public class Main {
@@ -125,7 +126,6 @@ public class Main {
     }
 
     private static void processQueues(int limit, int threads) {
-
         List<WordQueue> queueList = DatabaseHelper.getUnprocessedWordQueue(limit);
         DatabaseHelper.markWordQueueAsInProcess(limit);
         // split list into equal parts
@@ -134,8 +134,7 @@ public class Main {
 
         for (int i = 0; i < threads; i++) {
             Thread thread = new Thread(
-                    new WordQueueProcessing(getNewDriver(i),
-                            subSets.get(i)));
+                    new WordQueueProcessingCurl(subSets.get(i)));
             thread.start();
         }
     }

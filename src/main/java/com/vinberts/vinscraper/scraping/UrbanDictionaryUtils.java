@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DATE_FORMAT;
+
 /**
  * UrbanDictionaryUtils
  */
@@ -54,7 +56,7 @@ public class UrbanDictionaryUtils {
             String dateString = StringUtils.substringAfter(contribEle.getText(),
                     definition.getUsername() + " ");
             log.debug("date added text: " + dateString);
-            SimpleDateFormat formatter = new SimpleDateFormat("MMMMM dd, yyyy");
+            SimpleDateFormat formatter = new SimpleDateFormat(URBAN_DATE_FORMAT);
             try {
                 Date dateAdded = formatter.parse(dateString);
                 definition.setDateAdded(dateAdded.toInstant()
