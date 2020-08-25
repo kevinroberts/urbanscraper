@@ -44,6 +44,7 @@ public class WordQueueProcessingCurl implements Runnable {
             Document document = CurlUtils.getHtmlViaCurl(link);
             Element defDiv = document.select(".def-panel").first();
             if (Objects.isNull(defDiv)) {
+                log.warn(queue.getWord() + " could not be loaded and errored out");
                 DatabaseHelper.updateWordQueueProcess(queue, false);
             } else {
                 DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defDiv));
@@ -58,7 +59,6 @@ public class WordQueueProcessingCurl implements Runnable {
     }
 
     private boolean attemptSaveNewDefinition(Element element) {
-        if (Objects.nonNull(element) && element.hasAttr("data-defid")) {
             final String definitionId = element.attr("data-defid");
 
             Optional<Definition> definitionCheck = DatabaseHelper.getDefinitionById(definitionId);
@@ -134,9 +134,6 @@ public class WordQueueProcessingCurl implements Runnable {
                         ": Definition already scraped for word: "
                         + definitionCheck.get().getWord());
             }
-        } else {
-            log.warn("Could not load word");
-        }
         return false;
 
     }
