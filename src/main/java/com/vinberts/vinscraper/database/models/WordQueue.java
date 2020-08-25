@@ -34,6 +34,9 @@ public class WordQueue {
     @Column(columnDefinition = "boolean")
     private Boolean processed;
 
+    @Column(columnDefinition = "boolean", name = "has_error")
+    private Boolean hasError;
+
     @Column(columnDefinition = "boolean", name = "being_processed")
     private Boolean beingProcessed;
 

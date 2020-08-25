@@ -69,7 +69,7 @@ public class DatabaseHelper {
         Session session = HibernateUtil.getSessionFactory().openSession();
         EntityManager manager = session.getEntityManagerFactory().createEntityManager();
 
-        String hql = "SELECT q FROM WordQueue q WHERE q.processed = false and q.beingProcessed = false order by q.dateAdded ASC";
+        String hql = "SELECT q FROM WordQueue q WHERE q.processed = false and q.beingProcessed = false and q.hasError = false order by q.dateAdded ASC";
         Query query = manager.createQuery(hql);
         query.setMaxResults(limit);
         List results = query.getResultList();
@@ -143,10 +143,15 @@ public class DatabaseHelper {
             Session session = HibernateUtil.getSessionFactory().openSession();
             manager = session.getEntityManagerFactory().createEntityManager();
             manager.getTransaction().begin();
-            String hql = "UPDATE WordQueue set processed = :process, beingProcessed = false " +
+            String hql = "UPDATE WordQueue set processed = :process, hasError = :hasError, beingProcessed = false " +
                     "WHERE uuid = :id";
             Query query = manager.createQuery(hql);
             query.setParameter("process", processSuccessful);
+            if (!processSuccessful) {
+                query.setParameter("hasError", true);
+            } else {
+                query.setParameter("hasError", false);
+            }
             query.setParameter("id", wordQueue.getUuid());
             query.executeUpdate();
             manager.getTransaction().commit();

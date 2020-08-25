@@ -24,7 +24,7 @@ public class CurlUtils {
 
 
     public static Document getHtmlViaCurl(String url) {
-        CUrl cUrl = new CUrl(url).opt("-A", USER_AGENT_WINDOWS);
+        CUrl cUrl = new CUrl(url).opt("-A", USER_AGENT_WINDOWS).opt("-L");
         return cUrl.exec(htmlResolver, null);
     }
 

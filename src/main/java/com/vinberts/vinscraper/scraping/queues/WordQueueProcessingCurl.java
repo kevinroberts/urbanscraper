@@ -43,7 +43,11 @@ public class WordQueueProcessingCurl implements Runnable {
             String link = queue.getUrl();
             Document document = CurlUtils.getHtmlViaCurl(link);
             Element defDiv = document.select(".def-panel").first();
-            DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defDiv));
+            if (Objects.isNull(defDiv)) {
+                DatabaseHelper.updateWordQueueProcess(queue, false);
+            } else {
+                DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defDiv));
+            }
             try {
                 Thread.sleep(RandomUtils.nextInt(300,400));
             } catch (InterruptedException e) {
