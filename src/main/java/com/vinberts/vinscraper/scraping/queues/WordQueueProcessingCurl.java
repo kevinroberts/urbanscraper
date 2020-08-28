@@ -73,6 +73,9 @@ public class WordQueueProcessingCurl implements Runnable {
                 // get meaning from element
                 Element meaningEle = element.selectFirst(".meaning");
                 definition.setMeaning(meaningEle.text());
+                if (definition.getMeaning().length() > 23000) {
+                    definition.setMeaning(StringUtils.abbreviate(definition.getMeaning(), "", 23000));
+                }
                 // get example from element
                 Element exampleEle = element.selectFirst(".example");
                 definition.setExample(exampleEle.text());
