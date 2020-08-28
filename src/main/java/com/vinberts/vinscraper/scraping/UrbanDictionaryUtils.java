@@ -15,10 +15,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -139,45 +137,6 @@ public class UrbanDictionaryUtils {
         }
     }
 
-    public static void loadDefinitionsByAlpha() {
-        ChromeDriverInstanceOne chromeDriver = ChromeDriverInstanceOne.getInstance();
-        List<String> list = Arrays.asList("A", "B", "C",
-                "D", "E", "F", "G", "H", "I", "J",
-                "K", "L", "M", "N", "O", "P", "Q",
-                "R", "S", "T", "U", "V", "W", "X",
-                "Y", "Z");
-        for (String letter: list) {
-            int pagesToVisit = 800;
-            int currentPage = 66;
-            String pageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d", letter, currentPage);
-            chromeDriver.getDriver().get(pageToLoad);
-            WebElement listOfWords = chromeDriver.getDriver().findElement(By.className("no-bullet"));
-            List<WebElement> anchors = listOfWords.findElements(By.tagName("a"));
-            log.info(String.format("Found %d words on page %d for letter %s", anchors.size(), currentPage, letter));
-            loadToDBQueue(anchors);
-            currentPage++;
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                log.error("InterruptedException thread exception", e);
-            }
-            for (int i = pagesToVisit; i >= 1; i--) {
-                String nextPageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d", letter, currentPage);
-                chromeDriver.getDriver().navigate().to(nextPageToLoad);
-                WebElement listWords = chromeDriver.getDriver().findElement(By.className("no-bullet"));
-                List<WebElement> wordAnchors = listWords.findElements(By.tagName("a"));
-                log.info(String.format("Found %d words on page %d for letter %s", wordAnchors.size(), currentPage, letter));
-                currentPage++;
-                loadToDBQueue(wordAnchors);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    log.error("InterruptedException thread exception", e);
-                }
-            }
-        }
-    }
-
     public static void loadToDBQueue(final List<WebElement> anchors) {
         for (WebElement element: anchors) {
             String word = element.getText();
@@ -203,18 +162,11 @@ public class UrbanDictionaryUtils {
         }
     }
 
-    private static void loadLinkedMapToDB(final Map<String, String> linkedMap) {
-        ChromeDriverInstanceOne chromeDriver = ChromeDriverInstanceOne.getInstance();
-        for (Map.Entry<String, String> entry : linkedMap.entrySet()) {
-            String link = entry.getValue();
-            chromeDriver.getDriver().navigate().to(link);
-            List<WebElement> defPanels = chromeDriver.getDriver().findElements(By.className("def-panel"));
-            UrbanDictionaryUtils.attemptSaveNewDefinition(defPanels.get(0));
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                log.error("InterruptedException thread exception", e);
-            }
+    public static String getFullUrlFromLink(String link) {
+        if (StringUtils.startsWithIgnoreCase(link, "/")) {
+            return "https://www.urbandictionary.com" + link;
+        } else {
+            return link;
         }
     }
 }

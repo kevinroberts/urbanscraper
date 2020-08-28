@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DATE_FORMAT;
+import static com.vinberts.vinscraper.scraping.UrbanDictionaryUtils.getFullUrlFromLink;
 
 /**
  *
@@ -40,7 +41,7 @@ public class WordQueueProcessingCurl implements Runnable {
                 Thread.currentThread().getName() +
                 " for word queue of size " + wordQueueList.size());
         for (WordQueue queue: wordQueueList) {
-            String link = queue.getUrl();
+            String link = getFullUrlFromLink(queue.getUrl());
             Document document = CurlUtils.getHtmlViaCurl(link);
             Element defDiv = document.select(".def-panel").first();
             if (Objects.isNull(defDiv)) {
