@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -33,21 +34,25 @@ public class AlphaWordLoaderCurl implements Runnable {
     @Override
     public void run() {
         int currentPage = startPage;
-        final int pagesToVisit = 800;
+        final int pagesToVisit = 850;
         for (int i = pagesToVisit; i >= 1; i--) {
             String nextPageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d",
                     letterToLoad.toUpperCase(), currentPage);
             Document document = CurlUtils.getHtmlViaCurl(nextPageToLoad);
 
             Element listWords = document.selectFirst(".no-bullet");
-            List<Element> wordAnchors = listWords.select("a");
-            log.info(String.format("Thread %s: Found %d words on page %d for letter %s",
-                            Thread.currentThread().getName(),
-                            wordAnchors.size(),
-                            currentPage,
-                            letterToLoad));
+            if (Objects.nonNull(listWords)) {
+                List<Element> wordAnchors = listWords.select("a");
+                log.info(String.format("Thread %s: Found %d words on page %d for letter %s",
+                        Thread.currentThread().getName(),
+                        wordAnchors.size(),
+                        currentPage,
+                        letterToLoad));
+                loadToDBQueue(wordAnchors);
+            } else {
+                log.warn("Could not load any words for page " + currentPage + " for letter " + letterToLoad);
+            }
             currentPage++;
-            loadToDBQueue(wordAnchors);
             try {
                 Thread.sleep(RandomUtils.nextInt(300,400));
             } catch (InterruptedException e) {

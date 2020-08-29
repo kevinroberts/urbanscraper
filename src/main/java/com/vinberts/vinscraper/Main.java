@@ -104,15 +104,19 @@ public class Main {
 
     private static void processQueues(int limit, int threads) {
         List<WordQueue> queueList = DatabaseHelper.getUnprocessedWordQueue(limit);
-        DatabaseHelper.markWordQueueAsInProcess(limit);
-        // split list into equal parts
-        int splitSize = queueList.size() / threads;
-        List<List<WordQueue>> subSets = Lists.partition(queueList, splitSize);
+        if (queueList.size() > 0) {
+            DatabaseHelper.markWordQueueAsInProcess(limit);
+            // split list into equal parts
+            int splitSize = queueList.size() / threads;
+            List<List<WordQueue>> subSets = Lists.partition(queueList, splitSize);
 
-        for (int i = 0; i < threads; i++) {
-            Thread thread = new Thread(
-                    new WordQueueProcessingCurl(subSets.get(i)));
-            thread.start();
+            for (int i = 0; i < threads; i++) {
+                Thread thread = new Thread(
+                        new WordQueueProcessingCurl(subSets.get(i)));
+                thread.start();
+            }
+        } else {
+            log.info("No entries found in unprocessed word queue");
         }
     }
 
