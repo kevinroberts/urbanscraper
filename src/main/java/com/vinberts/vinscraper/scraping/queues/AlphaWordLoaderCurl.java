@@ -40,7 +40,7 @@ public class AlphaWordLoaderCurl implements Runnable {
                     letterToLoad.toUpperCase(), currentPage);
             Document document = CurlUtils.getHtmlViaCurl(nextPageToLoad);
 
-            Element listWords = document.selectFirst(".no-bullet");
+            Element listWords = Objects.nonNull(document) ? document.selectFirst(".no-bullet") : null;
             if (Objects.nonNull(listWords)) {
                 List<Element> wordAnchors = listWords.select("a");
                 log.info(String.format("Thread %s: Found %d words on page %d for letter %s",
