@@ -93,6 +93,7 @@ public class AlphaWordLoaderCurl implements Runnable {
                 queue.setUrl(element.attr("href"));
                 queue.setDateAdded(LocalDateTime.now());
                 queue.setProcessed(false);
+                queue.setBeingProcessed(false);
                 queue.setHasError(false);
                 DatabaseHelper.insertNewWordQueue(queue);
                 log.info("Word loaded to queue: " + word);
