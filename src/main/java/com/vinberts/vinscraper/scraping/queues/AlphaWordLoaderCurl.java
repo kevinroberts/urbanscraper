@@ -1,12 +1,15 @@
 package com.vinberts.vinscraper.scraping.queues;
 
+import com.google.common.primitives.Ints;
 import com.vinberts.vinscraper.database.DatabaseHelper;
 import com.vinberts.vinscraper.database.models.WordQueue;
 import com.vinberts.vinscraper.scraping.curl.CurlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +37,8 @@ public class AlphaWordLoaderCurl implements Runnable {
     @Override
     public void run() {
         int currentPage = startPage;
-        final int pagesToVisit = 850;
+        final int pagesToVisit = 9000;
+        Integer lastPage = startPage;
         for (int i = pagesToVisit; i >= 1; i--) {
             String nextPageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d",
                     letterToLoad.toUpperCase(), currentPage);
@@ -51,6 +55,21 @@ public class AlphaWordLoaderCurl implements Runnable {
                 loadToDBQueue(wordAnchors);
             } else {
                 log.warn("Could not load any words for page " + currentPage + " for letter " + letterToLoad);
+            }
+            Elements paginationEles = document.select(".pagination li");
+            if (Objects.nonNull(paginationEles)) {
+                Element paginationEleLast = paginationEles.last();
+                String lastPageStr = StringUtils.substringAfterLast(paginationEleLast.child(0).attr("href"), "page=");
+                if (StringUtils.isNotEmpty(lastPageStr)) {
+                    lastPage = Ints.tryParse(lastPageStr);
+                }
+                if (Objects.nonNull(lastPage) && lastPage == currentPage) {
+                    log.info(String.format("Thread %s has reached final page %d for alpha load for letter %s",
+                            Thread.currentThread().getName(),
+                            currentPage,
+                            letterToLoad));
+                    break;
+                }
             }
             currentPage++;
             try {
