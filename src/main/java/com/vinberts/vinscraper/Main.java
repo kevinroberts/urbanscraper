@@ -19,6 +19,7 @@ import com.vinberts.vinscraper.scraping.queues.WordQueueProcessingCurl;
 import com.vinberts.vinscraper.utils.ConsoleUtil;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +38,7 @@ public class Main {
     public static void main(String[] args) {
         SystemPropertyLoader.checkAndLoadRequiredPropValues();
         Scanner console = new Scanner(System.in);
-        int quitCode = 4;
+        int quitCode = 5;
         int userInput = 1;
         do {
             if (userInput == quitCode) {
@@ -46,13 +47,14 @@ public class Main {
             ConsoleUtil.info("\nUrbanScraper menu:\n " +
                     "1. Start alpha loading\n " +
                     "2. Start processing word queue \n " +
-                    "3. Load new words by date " +
+                    "3. Load new words by date (from today) \n " +
+                    "4. Load new words by date (specified)" +
                     "\n " + quitCode + ". Quit the application");
 
             try {
                 userInput = console.nextInt();
             } catch (InputMismatchException ex) {
-                ConsoleUtil.info("Sorry that was not an acceptable input.");
+                ConsoleUtil.info("Sorry that was not an acceptable input. (enter a number between 1 and " + quitCode + ")");
                 break;
             }
 
@@ -100,6 +102,16 @@ public class Main {
                     }
                     break;
                 case 4:
+                    ConsoleUtil.info("Specify date string in format: 2020-01-30");
+                    String dateString = console.next();
+                    if (StringUtils.isNotEmpty(dateString)) {
+                        ConsoleUtil.info("Starting process for loading " + dateString + " new words");
+                        Thread thread = new Thread(
+                                new NewWordLoaderCurl(1, dateString));
+                        thread.start();
+                    }
+                    break;
+                case 5:
                     ConsoleUtil.info("Goodbye");
                     break;
             }

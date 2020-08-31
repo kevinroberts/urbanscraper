@@ -52,9 +52,9 @@ public class AlphaWordLoaderCurl extends WordLoader implements Runnable {
             } else {
                 log.warn("Could not load any words for page " + currentPage + " for letter " + letterToLoad);
             }
-            Elements paginationEles = document.select(".pagination li");
-            if (Objects.nonNull(paginationEles)) {
-                Element paginationEleLast = paginationEles.last();
+            Elements paginationElements = document.select(".pagination li");
+            if (Objects.nonNull(paginationElements) && !paginationElements.isEmpty()) {
+                Element paginationEleLast = paginationElements.last();
                 String lastPageStr = StringUtils.substringAfterLast(paginationEleLast.child(0).attr("href"), "page=");
                 if (StringUtils.isNotEmpty(lastPageStr)) {
                     lastPage = Ints.tryParse(lastPageStr);
