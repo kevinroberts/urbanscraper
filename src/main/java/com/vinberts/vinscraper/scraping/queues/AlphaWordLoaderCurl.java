@@ -1,8 +1,6 @@
 package com.vinberts.vinscraper.scraping.queues;
 
 import com.google.common.primitives.Ints;
-import com.vinberts.vinscraper.database.DatabaseHelper;
-import com.vinberts.vinscraper.database.models.WordQueue;
 import com.vinberts.vinscraper.scraping.curl.CurlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -11,16 +9,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * AlphaWordLoaderCurl
  */
 @Slf4j
-public class AlphaWordLoaderCurl implements Runnable {
+public class AlphaWordLoaderCurl extends WordLoader implements Runnable {
     private final String letterToLoad;
     private final int startPage;
 
@@ -83,23 +79,4 @@ public class AlphaWordLoaderCurl implements Runnable {
                 letterToLoad));
     }
 
-    private void loadToDBQueue(final List<Element> anchors) {
-        for (Element element: anchors) {
-            String word = element.text();
-            Optional<WordQueue> existingWord = DatabaseHelper.getWordQueueByWord(word);
-            if (existingWord.isEmpty()) {
-                WordQueue queue = new WordQueue();
-                queue.setWord(word);
-                queue.setUrl(element.attr("href"));
-                queue.setDateAdded(LocalDateTime.now());
-                queue.setProcessed(false);
-                queue.setBeingProcessed(false);
-                queue.setHasError(false);
-                DatabaseHelper.insertNewWordQueue(queue);
-                log.info("Word loaded to queue: " + word);
-            } else {
-                log.info("Word already loaded: " + existingWord.get().getWord());
-            }
-        }
-    }
 }

@@ -14,6 +14,7 @@ import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceSix;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceThree;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverInstanceTwo;
 import com.vinberts.vinscraper.scraping.queues.AlphaWordLoaderCurl;
+import com.vinberts.vinscraper.scraping.queues.NewWordLoaderCurl;
 import com.vinberts.vinscraper.scraping.queues.WordQueueProcessingCurl;
 import com.vinberts.vinscraper.utils.ConsoleUtil;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
@@ -36,7 +37,7 @@ public class Main {
     public static void main(String[] args) {
         SystemPropertyLoader.checkAndLoadRequiredPropValues();
         Scanner console = new Scanner(System.in);
-        int quitCode = 3;
+        int quitCode = 4;
         int userInput = 1;
         do {
             if (userInput == quitCode) {
@@ -44,7 +45,8 @@ public class Main {
             }
             ConsoleUtil.info("\nUrbanScraper menu:\n " +
                     "1. Start alpha loading\n " +
-                    "2. Start processing word queue " +
+                    "2. Start processing word queue \n " +
+                    "3. Load new words by date " +
                     "\n " + quitCode + ". Quit the application");
 
             try {
@@ -88,6 +90,16 @@ public class Main {
                     }
                     break;
                 case 3:
+                    ConsoleUtil.info("How many days do you want to process?");
+                    int days = console.nextInt();
+                    if (days > 0) {
+                        ConsoleUtil.info("Starting process for loading " + days + " days worth of words");
+                        Thread thread = new Thread(
+                                new NewWordLoaderCurl(days));
+                        thread.start();
+                    }
+                    break;
+                case 4:
                     ConsoleUtil.info("Goodbye");
                     break;
             }

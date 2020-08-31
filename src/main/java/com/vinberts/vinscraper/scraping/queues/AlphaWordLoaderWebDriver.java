@@ -1,6 +1,5 @@
 package com.vinberts.vinscraper.scraping.queues;
 
-import com.vinberts.vinscraper.scraping.UrbanDictionaryUtils;
 import com.vinberts.vinscraper.scraping.chrome.ChromeDriverEx;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -10,10 +9,11 @@ import org.openqa.selenium.WebElement;
 import java.util.List;
 
 /**
- * AlphaWordLoader
+ * AlphaWordLoaderWebDrive
+ * uses chrome web driver to load urbdic words per letter
  */
 @Slf4j
-public class AlphaWordLoaderWebDriver implements Runnable {
+public class AlphaWordLoaderWebDriver extends WordLoader implements Runnable {
     private final ChromeDriverEx driver;
     private final String letterToLoad;
     private final int startPage;
@@ -46,7 +46,7 @@ public class AlphaWordLoaderWebDriver implements Runnable {
                             currentPage,
                             letterToLoad));
             currentPage++;
-            UrbanDictionaryUtils.loadToDBQueue(wordAnchors);
+            loadToDBQueue(wordAnchors);
             try {
                 Thread.sleep(RandomUtils.nextInt(300,500));
             } catch (InterruptedException e) {
