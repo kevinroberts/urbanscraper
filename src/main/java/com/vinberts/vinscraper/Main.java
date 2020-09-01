@@ -58,16 +58,18 @@ public class Main {
                 .hasArgs().valueSeparator('=')
                 .build();
         Option queue = Option.builder("q")
+                .longOpt("queue") // can be optionally triggered by passing --queue
                 .desc("start processing of unloaded words with specified limit argument NUMBER_TO_PROCESS NUMBER_OF_THREADS")
                 .hasArgs()
                 .numberOfArgs(2)
                 .argName("NUMBER_TO_PROCESS NUMBER_OF_THREADS")
                 .build();
         Option days = Option.builder("d")
-                .desc("start processing of new words by date, NUMBER_OF_DAYS START_DATE (Start date format yyyy-mm-dd)")
+                .longOpt("days")
+                .desc("start processing of new words by date, NUMBER_OF_DAYS START_DATE (Start date format yyyy-mm-dd - default will use current date)")
                 .hasArgs()
                 .numberOfArgs(2)
-                .optionalArg(true)
+                .optionalArg(true) // optional need to specify a date string, by default it will use the current date
                 .argName("NUMBER_OF_DAYS START_DATE")
                 .build();
         options.addOption(help);
@@ -117,6 +119,9 @@ public class Main {
                 }
             } else if (line.hasOption(days.getOpt())) {
                 String[] optionValues = line.getOptionValues(days.getOpt());
+                if (optionValues.length == 0) {
+                    throw new ParseException("Invalid number of days specified; must be an integer value");
+                }
                 String numberOfDaysStr = optionValues[0];
                 String dateString = StringUtils.EMPTY;
                 if (optionValues.length > 1) {
@@ -221,7 +226,7 @@ public class Main {
         final HelpFormatter formatter = new HelpFormatter();
         final String usageHeader = "Vinscraper use instruction";
         final String usageFooter = "";
-        formatter.printHelp(SYNTAX, usageHeader, options, usageFooter);
+        formatter.printHelp(80, SYNTAX, usageHeader, options, usageFooter);
     }
 
 }
