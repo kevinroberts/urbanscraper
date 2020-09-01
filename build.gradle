@@ -13,8 +13,22 @@ repositories {
     mavenCentral()
 }
 
+task createProperties(dependsOn: processResources) {
+    doLast {
+        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+    }
+}
+
 run {
     standardInput = System.in
+}
+
+classes {
+    dependsOn createProperties
 }
 
 dependencies {
@@ -29,6 +43,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.rockswang/java-curld
     compile group: 'com.github.rockswang', name: 'java-curl', version: '1.2.2.2'
     compile group: 'org.jsoup', name: 'jsoup', version: '1.13.1'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
 
     // SLF4J as a facade over Log4j2 required dependencies
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'

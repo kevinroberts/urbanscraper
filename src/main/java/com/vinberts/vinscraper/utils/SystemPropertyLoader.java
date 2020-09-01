@@ -20,6 +20,7 @@ public class SystemPropertyLoader {
     public static void checkAndLoadRequiredPropValues() {
         InputStream inputStream;
         String defaultPath = "app.properties";
+        String versionPath = "version.properties";
         try {
             inputStream = SystemPropertyLoader.class.getClassLoader().getResourceAsStream(defaultPath);
             if (inputStream != null) {
@@ -31,6 +32,18 @@ public class SystemPropertyLoader {
         } catch (Exception e) {
             log.error("Property loader exception: ", e);
         }
+        try {
+            inputStream = SystemPropertyLoader.class.getClassLoader().getResourceAsStream(versionPath);
+            if (inputStream != null) {
+                defaultProps.load(inputStream);
+                log.info("loaded " + defaultProps.size() + " properties");
+            } else {
+                throw new FileNotFoundException("version property file '" + versionPath + "' not found in the classpath");
+            }
+        } catch (Exception e) {
+            log.error("Property loader exception: ", e);
+        }
+
         checkForRequiredEnvVariable(CHROME_DRIVER_PATH);
     }
 

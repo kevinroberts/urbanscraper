@@ -19,103 +19,137 @@ import com.vinberts.vinscraper.scraping.queues.WordQueueProcessingCurl;
 import com.vinberts.vinscraper.utils.ConsoleUtil;
 import com.vinberts.vinscraper.utils.SystemPropertyLoader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.InputMismatchException;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Objects;
+import java.util.Properties;
 
 
 /**
  * Main App
- * entry point to Urbanscraper
+ * entry point to Urbanscraper / vinscraper
  */
 @Slf4j
 public class Main {
 
+    public static final String SYNTAX = "vinscraper";
+
     public static void main(String[] args) {
         SystemPropertyLoader.checkAndLoadRequiredPropValues();
-        Scanner console = new Scanner(System.in);
-        int quitCode = 5;
-        int userInput = 1;
-        do {
-            if (userInput == quitCode) {
-                break;
-            }
-            ConsoleUtil.info("\nUrbanScraper menu:\n " +
-                    "1. Start alpha loading\n " +
-                    "2. Start processing word queue \n " +
-                    "3. Load new words by date (from today) \n " +
-                    "4. Load new words by date (specified)" +
-                    "\n " + quitCode + ". Quit the application");
 
-            try {
-                userInput = console.nextInt();
-            } catch (InputMismatchException ex) {
-                ConsoleUtil.info("Sorry that was not an acceptable input. (enter a number between 1 and " + quitCode + ")");
-                break;
-            }
-
-            switch (userInput) {
-                case 1: // '\001'
-                    List<Integer> startingPages = new ArrayList<>();
-                    ConsoleUtil.info("Enter list of letters (separated by commas):");
-                    String letterList = console.next();
-
-                    List<String> letters = Splitter.on(",").trimResults()
-                            .splitToList(letterList);
-
-                    ConsoleUtil.info("Enter pages to start at (separated by commas)?");
-                    String pagesList = console.next();
-                    List<String> startingPagesStr = Splitter.on(",").trimResults()
-                            .splitToList(pagesList);
-                    for (String startPage: startingPagesStr) {
-                        startingPages.add(Ints.tryParse(startPage));
+        // create command line options
+        Options options = new Options();
+        Option help = new Option( "help", "print this message" );
+        Option version = new Option( "version", "print the current version and exit" );
+        Option alpha = Option.builder("alpha")
+                .argName("letters=startPage")
+                .desc("start alphabetical loading based on a list of letters and start pages | e.g: vinscraper -a a,b=1,1 (would be letters a,b - starting at page 1,1)")
+                .hasArgs().valueSeparator('=')
+                .build();
+        Option queue = Option.builder("q")
+                .desc("start processing of unloaded words with specified limit argument NUMBER_TO_PROCESS NUMBER_OF_THREADS")
+                .hasArgs()
+                .numberOfArgs(2)
+                .argName("NUMBER_TO_PROCESS NUMBER_OF_THREADS")
+                .build();
+        Option days = Option.builder("d")
+                .desc("start processing of new words by date, NUMBER_OF_DAYS START_DATE (Start date format yyyy-mm-dd)")
+                .hasArgs()
+                .numberOfArgs(2)
+                .optionalArg(true)
+                .argName("NUMBER_OF_DAYS START_DATE")
+                .build();
+        options.addOption(help);
+        options.addOption(version);
+        options.addOption(alpha);
+        options.addOption(queue);
+        options.addOption(days);
+        // create the parser
+        CommandLineParser parser = new DefaultParser();
+        try {
+            // parse the command line arguments
+            CommandLine line = parser.parse( options, args );
+            if (line.hasOption(help.getOpt())) {
+                printHelp(options);
+            } else if (line.hasOption(version.getOpt())) {
+                Properties systemProps = SystemPropertyLoader.getSystemProps();
+                ConsoleUtil.info("Version: " + systemProps.get("version"));
+            } else if (line.hasOption(alpha.getOpt())) {
+                String propertyName = line.getOptionValues(alpha.getOpt())[0];  // will be "key / letters"
+                String propertyValue = line.getOptionValues(alpha.getOpt())[1]; // will be "value / pages"
+                List<Integer> startingPages = new ArrayList<>();
+                List<String> startingPagesStr = Splitter.on(",").trimResults()
+                        .splitToList(propertyValue);
+                for (String startPage: startingPagesStr) {
+                    startingPages.add(Ints.tryParse(startPage));
+                }
+                List<String> letters = Splitter.on(",").trimResults()
+                        .splitToList(propertyName);
+                ConsoleUtil.info("Running alpha loading for letters "
+                        + Arrays.toString(letters.toArray()) + " " +
+                        "Starting at pages " + Arrays.toString(startingPagesStr.toArray()));
+                processAlphaLoading(letters, startingPages);
+            } else if (line.hasOption(queue.getOpt())) {
+                String numberOfItemsStr = line.getOptionValues(queue.getOpt())[0];
+                String numberOfThreadsStr = line.getOptionValues(queue.getOpt())[1];
+                Integer numberOfItems = Ints.tryParse(numberOfItemsStr);
+                Integer numberOfThreads = Ints.tryParse(numberOfThreadsStr);
+                if (Objects.nonNull(numberOfItems) && Objects.nonNull(numberOfThreads)) {
+                    ConsoleUtil.info("Running unprocessed queue for number of items: " + numberOfItemsStr + " with number of threads " + numberOfThreads);
+                    if (numberOfThreads < 0 || numberOfThreads > 6) {
+                        ConsoleUtil.info("Threads specified greater than max threshold, setting to max value of 6");
+                        numberOfThreads = 6;
                     }
-
-                    ConsoleUtil.info("Running alpha loading for " + Arrays.toString(letters.toArray()));
-                    processAlphaLoading(letters, startingPages);
-                    break;
-                case 2:
-                    ConsoleUtil.info("How many queue records do you want to process?");
-                    int recordsToProcess = console.nextInt();
-                    if (recordsToProcess > 0) {
-                        ConsoleUtil.info("Starting process for loading " + recordsToProcess + " words");
-                        ConsoleUtil.info("How many browser threads do you want to use?");
-                        int threads = console.nextInt();
-                        if (threads < 0 || threads > 6) {
-                            threads = 1;
-                        }
-                        processQueues(recordsToProcess, threads);
-                    }
-                    break;
-                case 3:
-                    ConsoleUtil.info("How many days do you want to process?");
-                    int days = console.nextInt();
-                    if (days > 0) {
-                        ConsoleUtil.info("Starting process for loading " + days + " days worth of words");
-                        Thread thread = new Thread(
-                                new NewWordLoaderCurl(days));
-                        thread.start();
-                    }
-                    break;
-                case 4:
-                    ConsoleUtil.info("Specify date string in format: 2020-01-30");
-                    String dateString = console.next();
+                    processQueues(numberOfItems, numberOfThreads);
+                } else {
+                    throw new ParseException("Invalid number of items / threads specified, must be an integer value");
+                }
+            } else if (line.hasOption(days.getOpt())) {
+                String[] optionValues = line.getOptionValues(days.getOpt());
+                String numberOfDaysStr = optionValues[0];
+                String dateString = StringUtils.EMPTY;
+                if (optionValues.length > 1) {
+                    dateString = optionValues[1];
+                }
+                Integer numberOfDays = Ints.tryParse(numberOfDaysStr);
+                if (Objects.nonNull(numberOfDays)) {
+                    ConsoleUtil.info("Running day loading for new words : number of days "
+                            + numberOfDaysStr + " " +
+                            "Starting at date " + dateString);
                     if (StringUtils.isNotEmpty(dateString)) {
-                        ConsoleUtil.info("Starting process for loading " + dateString + " new words");
                         Thread thread = new Thread(
-                                new NewWordLoaderCurl(1, dateString));
+                                new NewWordLoaderCurl(numberOfDays, dateString));
+                        thread.start();
+                    } else {
+                        Thread thread = new Thread(
+                                new NewWordLoaderCurl(numberOfDays));
                         thread.start();
                     }
-                    break;
-                case 5:
-                    ConsoleUtil.info("Goodbye");
-                    break;
+                } else {
+                    throw new ParseException("Invalid number of days; must be an integer value");
+                }
+            } else {
+                ConsoleUtil.info("Please, follow the instructions below:");
+                printUsage(options);
             }
-        } while (true);
+        } catch( ParseException exp ) {
+            // oops, something went wrong
+            ConsoleUtil.info( "Parsing failed.  Reason: " + exp.getMessage() );
+            ConsoleUtil.info("Please, follow the instructions below:");
+            printHelp(options);
+            System.exit(1);
+        }
     }
 
     private static void processAlphaLoading(List<String> letters, List<Integer> startingPages) {
@@ -161,6 +195,33 @@ public class Main {
             default:
                 return ChromeDriverInstanceOne.getInstance().getDriver();
         }
+    }
+
+
+    private static void printUsage(final Options options) {
+        final HelpFormatter formatter = new HelpFormatter();
+        ConsoleUtil.info("\n==============");
+        ConsoleUtil.info("Vinscraper use instructions");
+        ConsoleUtil.info("==============");
+        final PrintWriter pw  = new PrintWriter(System.out);
+        formatter.printUsage(pw, 80, SYNTAX, options);
+        pw.flush();
+    }
+
+
+    /**
+     * Generate help information with Apache Commons CLI.
+     *
+     * @param options Instance of Options to be used to prepare
+     *    help formatter.
+     * @return HelpFormatter instance that can be used to print
+     *    help information.
+     */
+    private static void printHelp(final Options options) {
+        final HelpFormatter formatter = new HelpFormatter();
+        final String usageHeader = "Vinscraper use instruction";
+        final String usageFooter = "";
+        formatter.printHelp(SYNTAX, usageHeader, options, usageFooter);
     }
 
 }
