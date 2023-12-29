@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
-import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DATE_FORMAT_SHORT;
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.*;
 
 /**
  *
@@ -43,10 +43,10 @@ public class NewWordLoaderCurl extends WordLoader implements Runnable {
         }
         for (int i = 0; i < numberOfDays; i++) {
             String dateString = date.format(formatter);
-            String nextPageToLoad = String.format("https://www.urbandictionary.com/yesterday.php?date=%s",
+            String nextPageToLoad = String.format(URBAN_DIC_URL + "/yesterday.php?date=%s",
                     dateString);
             Document document = CurlUtils.getHtmlViaCurl(nextPageToLoad);
-            Element listWords = Objects.nonNull(document) ? document.selectFirst(".no-bullet") : null;
+            Element listWords = Objects.nonNull(document) ? document.selectFirst(MAIN_UL_SELECTOR) : null;
             if (Objects.nonNull(listWords)) {
                 List<Element> wordAnchors = listWords.select("a");
                 log.info(String.format("Thread %s: Found %d words for date %s",
@@ -70,10 +70,10 @@ public class NewWordLoaderCurl extends WordLoader implements Runnable {
                 while (Objects.nonNull(lastPage) && lastPage > currentPage) {
                     currentPage++;
                     log.info("Loading page " + currentPage + " for date " + dateString);
-                    String nextPageToLoadInner = String.format("https://www.urbandictionary.com/yesterday.php?date=%s&page=%d",
+                    String nextPageToLoadInner = String.format(URBAN_DIC_URL + "/yesterday.php?date=%s&page=%d",
                             dateString, currentPage);
                     Document documentPage = CurlUtils.getHtmlViaCurl(nextPageToLoadInner);
-                    Element listWordsPage = Objects.nonNull(documentPage) ? documentPage.selectFirst(".no-bullet") : null;
+                    Element listWordsPage = Objects.nonNull(documentPage) ? documentPage.selectFirst(MAIN_UL_SELECTOR) : null;
                     if (Objects.nonNull(listWordsPage)) {
                         List<Element> wordAnchors = listWords.select("a");
                         log.info(String.format("Thread %s: Found %d words for date %s on page %d",

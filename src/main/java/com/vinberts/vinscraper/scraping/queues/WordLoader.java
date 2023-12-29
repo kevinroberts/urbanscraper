@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DATE_FORMAT;
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DIC_URL;
 
 /**
  * WordLoader
@@ -52,11 +53,11 @@ public abstract class WordLoader {
             Long upCount = 0L;
             Long downCount = 0L;
 
+            // if the element was retrieved via web driver
             if (element instanceof WebElement) {
                 WebElement ele = (WebElement) element;
                 // get word from WebElement
-                WebElement header = ele.findElement(By.className("def-header"));
-                WebElement wordEle = header.findElement(By.className("word"));
+                WebElement wordEle = ele.findElement(By.className("word"));
                 definition.setWord(wordEle.getText());
                 // get meaning from WebElement
                 WebElement meaningEle = ele.findElement(By.className("meaning"));
@@ -71,18 +72,18 @@ public abstract class WordLoader {
                 dateString = StringUtils.substringAfter(contribEle.getText(),
                         definition.getUsername() + " ");
                 // get up votes / down votes
-                WebElement footer = ele.findElement(By.className("def-footer"));
-                WebElement upEle = footer.findElement(By.className("up"));
-                WebElement upCountEle = upEle.findElement(By.className("count"));
+                WebElement footer = ele.findElement(By.cssSelector("div.items-center"));
+                WebElement upEle = footer.findElement(By.tagName("button"));
+                WebElement upCountEle = upEle.findElement(By.tagName("span"));
                 upCountText = upCountEle.getText();
-                WebElement downEle = footer.findElement(By.className("down"));
-                WebElement downCountEle = downEle.findElement(By.className("count"));
+                WebElement downEle = footer.findElement(By.tagName("button"));
+                WebElement downCountEle = downEle.findElement(By.tagName("span"));
                 downCountText = downCountEle.getText();
             } else if (element instanceof Element) {
+                // else the element was retrieved via curl:
                 Element ele = (Element) element;
                 // get word from element
-                Element header = ele.selectFirst(".def-header");
-                Element wordEle = header.selectFirst(".word");
+                Element wordEle = ele.selectFirst(".word");
                 definition.setWord(wordEle.text());
                 // get meaning from element
                 Element meaningEle = ele.selectFirst(".meaning");
@@ -98,12 +99,12 @@ public abstract class WordLoader {
                 dateString = StringUtils.substringAfter(contribEle.text(),
                         definition.getUsername() + " ");
                 // get up votes / down votes
-                Element footer = ele.selectFirst(".def-footer");
-                Element upEle = footer.selectFirst(".up");
-                Element upCountEle = upEle.selectFirst(".count");
+                Element footer = ele.selectFirst("div.items-center");
+                Element upEle = footer.selectFirst("button");
+                Element upCountEle = upEle.selectFirst("span");
                 upCountText = upCountEle.text();
-                Element downEle = footer.selectFirst(".down");
-                Element downCountEle = downEle.selectFirst(".count");
+                Element downEle = footer.select("button").get(1);
+                Element downCountEle = downEle.selectFirst("span");
                 downCountText = downCountEle.text();
             }
 
@@ -193,7 +194,7 @@ public abstract class WordLoader {
 
     protected String getFullUrlFromLink(String link) {
         if (StringUtils.startsWithIgnoreCase(link, "/")) {
-            return "https://www.urbandictionary.com" + link;
+            return URBAN_DIC_URL + link;
         } else {
             return link;
         }

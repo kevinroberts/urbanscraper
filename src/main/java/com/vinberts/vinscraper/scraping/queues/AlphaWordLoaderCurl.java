@@ -12,6 +12,9 @@ import org.jsoup.select.Elements;
 import java.util.List;
 import java.util.Objects;
 
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.MAIN_UL_SELECTOR;
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DIC_URL;
+
 /**
  * AlphaWordLoaderCurl
  */
@@ -36,11 +39,11 @@ public class AlphaWordLoaderCurl extends WordLoader implements Runnable {
         final int pagesToVisit = 9000;
         Integer lastPage = startPage;
         for (int i = pagesToVisit; i >= 1; i--) {
-            String nextPageToLoad = String.format("https://www.urbandictionary.com/browse.php?character=%s&page=%d",
+            String nextPageToLoad = String.format(URBAN_DIC_URL + "/browse.php?character=%s&page=%d",
                     letterToLoad.toUpperCase(), currentPage);
             Document document = CurlUtils.getHtmlViaCurl(nextPageToLoad);
 
-            Element listWords = Objects.nonNull(document) ? document.selectFirst(".no-bullet") : null;
+            Element listWords = Objects.nonNull(document) ? document.selectFirst(MAIN_UL_SELECTOR) : null;
             if (Objects.nonNull(listWords)) {
                 List<Element> wordAnchors = listWords.select("a");
                 log.info(String.format("Thread %s: Found %d words on page %d for letter %s",

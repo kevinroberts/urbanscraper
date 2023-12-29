@@ -11,6 +11,8 @@ import org.jsoup.nodes.Element;
 import java.util.List;
 import java.util.Objects;
 
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.DEFINITION_SELECTOR;
+
 /**
  *
  */
@@ -31,9 +33,9 @@ public class WordQueueProcessingCurl extends WordLoader implements Runnable {
         for (WordQueue queue: wordQueueList) {
             String link = getFullUrlFromLink(queue.getUrl());
             Document document = CurlUtils.getHtmlViaCurl(link);
-            Element defDiv = document.select(".def-panel").first();
+            Element defDiv = document.select(DEFINITION_SELECTOR).first();
             if (Objects.isNull(defDiv)) {
-                log.warn(queue.getWord() + " could not be loaded and errored out");
+                log.warn(queue.getWord() + " could not be loaded or errored out");
                 DatabaseHelper.updateWordQueueProcess(queue, false);
             } else {
                 DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defDiv));

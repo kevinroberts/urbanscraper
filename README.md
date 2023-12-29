@@ -13,5 +13,10 @@ To run project:
 - create an app.properties file under src/main/resources and include the required system properties
 - `./gradlew build run`
 
-Released under MIT License
+Build the binary:
+- `./gradlew build`
 
+- Change to the distribution folder and unzip and run the binary
+- `./vinscraper`
+
+Released under MIT License

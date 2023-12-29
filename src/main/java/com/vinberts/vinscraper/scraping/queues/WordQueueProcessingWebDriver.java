@@ -11,6 +11,8 @@ import org.openqa.selenium.WebElement;
 
 import java.util.List;
 
+import static com.vinberts.vinscraper.scraping.ScrapingConstants.MAIN_UL_SELECTOR;
+
 /**
  *  WordQueueProcessing
  *  process a list of words / urls in
@@ -37,7 +39,7 @@ public class WordQueueProcessingWebDriver extends WordLoader implements Runnable
             try {
                 String link = getFullUrlFromLink(queue.getUrl());
                 driver.navigate().to(link);
-                List<WebElement> defPanels = driver.findElements(By.className("def-panel"));
+                List<WebElement> defPanels = driver.findElements(By.className(MAIN_UL_SELECTOR));
                 attemptSaveNewDefinition(defPanels.get(0));
                 DatabaseHelper.updateWordQueueProcess(queue, true);
             } catch (WebDriverException ue) {
