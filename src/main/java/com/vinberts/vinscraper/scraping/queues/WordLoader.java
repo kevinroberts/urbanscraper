@@ -1,32 +1,75 @@
 package com.vinberts.vinscraper.scraping.queues;
 
-import com.google.common.primitives.Longs;
 import com.vinberts.vinscraper.database.DatabaseHelper;
 import com.vinberts.vinscraper.database.models.Definition;
 import com.vinberts.vinscraper.database.models.WordQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.nodes.Element;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DATE_FORMAT;
 import static com.vinberts.vinscraper.scraping.ScrapingConstants.URBAN_DIC_URL;
+import static com.vinberts.vinscraper.scraping.curl.CurlUtils.getJsonViaCurl;
 
 /**
  * WordLoader
  */
 @Slf4j
 public abstract class WordLoader {
+
+    protected boolean attemptSaveNewDefinition(JSONObject definitions) {
+        JSONArray defList = definitions.getJSONArray("list");
+        for (int i = 0; i < defList.length(); i++) {
+            JSONObject defObject = defList.getJSONObject(i);
+            String definitionId = defObject.getBigInteger("defid").toString();
+            Optional<Definition> definitionCheck = DatabaseHelper.getDefinitionById(definitionId);
+            if (definitionCheck.isEmpty()) {
+                Definition definition = new Definition();
+                definition.setId(definitionId);
+                definition.setWord(defObject.getString("word"));
+                definition.setMeaning(defObject.getString("definition"));
+                definition.setUsername(defObject.getString("author"));
+                definition.setExample(defObject.getString("example"));
+                definition.setUpVotes(defObject.getLong("thumbs_down"));
+                definition.setDownVotes(defObject.getLong("thumbs_up"));
+                String dateString = defObject.getString("written_on");
+                definition.setDateAdded(
+                        convertToLocalDateTimeViaInstant(Date.from(Instant.parse(dateString)))
+                );
+
+                if (definition.getMeaning().length() > 23000) {
+                    log.warn("Meaning was too long to store into 23k for word: " + definition.getWord());
+                    definition.setMeaning(StringUtils.abbreviate(definition.getMeaning(), "", 23000));
+                }
+                if (definition.getExample().length() > 14000) {
+                    log.warn("Example was too long to store into 14k for word: " + definition.getWord());
+                    definition.setExample(StringUtils.abbreviate(definition.getExample(), "", 14000));
+                }
+                if (DatabaseHelper.insertNewDefinition(definition)) {
+                    log.info(Thread.currentThread().getName() +
+                            ": Stored new definition for word "
+                            + definition.getWord());
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
     /**
      * attemptSaveNewDefinition
      *
@@ -98,14 +141,6 @@ public abstract class WordLoader {
                 // extract date added | "by For the greater good August 15, 2020"
                 dateString = StringUtils.substringAfter(contribEle.text(),
                         definition.getUsername() + " ");
-                // get up votes / down votes
-                Element footer = ele.selectFirst("div.items-center");
-                Element upEle = footer.selectFirst("button");
-                Element upCountEle = upEle.selectFirst("span");
-                upCountText = upCountEle.text();
-                Element downEle = footer.select("button").get(1);
-                Element downCountEle = downEle.selectFirst("span");
-                downCountText = downCountEle.text();
             }
 
             log.debug("date added text: " + dateString);
@@ -118,30 +153,24 @@ public abstract class WordLoader {
                 log.warn("Could not parse date string: " + dateString);
                 definition.setDateAdded(LocalDateTime.now());
             }
-
-            // Parse Up count from String
-            try {
-                upCount = Longs.tryParse(upCountText);
-                if (Objects.isNull(upCount)) {
-                    upCount = 0L;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (StringUtils.isEmpty(definition.getMeaning())) {
+                log.info(Thread.currentThread().getName() +
+                        ": definition for word was empty "
+                        + definition.getWord());
+                return false;
             }
-            definition.setUpVotes(upCount);
 
-            try {
-                downCount = Longs.tryParse(downCountText);
-                if (Objects.isNull(upCount)) {
-                    downCount = 0L;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            definition.setDownVotes(downCount);
+            JSONObject votes = getJsonViaCurl("https://api.urbandictionary.com/v0/uncacheable?ids=" + definitionId);
+            definition.setUpVotes(Long.valueOf((Integer) votes.getJSONArray("thumbs").getJSONObject(0).get("up")));
+            definition.setDownVotes(Long.valueOf((Integer) votes.getJSONArray("thumbs").getJSONObject(0).get("down")));
 
             if (definition.getMeaning().length() > 23000) {
+                log.warn("Meaning was too long to store into 23k for word: " + definition.getWord());
                 definition.setMeaning(StringUtils.abbreviate(definition.getMeaning(), "", 23000));
+            }
+            if (definition.getExample().length() > 14000) {
+                log.warn("Example was too long to store into 14k for word: " + definition.getWord());
+                definition.setExample(StringUtils.abbreviate(definition.getExample(), "", 14000));
             }
             if (DatabaseHelper.insertNewDefinition(definition)) {
                 log.info(Thread.currentThread().getName() +
@@ -155,7 +184,7 @@ public abstract class WordLoader {
                     ": Definition already scraped for word: "
                     + definitionCheck.get().getWord());
         }
-        return false;
+        return true;
 
     }
 
@@ -199,4 +228,11 @@ public abstract class WordLoader {
             return link;
         }
     }
+
+    private LocalDateTime convertToLocalDateTimeViaInstant(Date dateToConvert) {
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+
 }

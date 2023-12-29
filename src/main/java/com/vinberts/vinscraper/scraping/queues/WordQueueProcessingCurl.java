@@ -5,13 +5,12 @@ import com.vinberts.vinscraper.database.models.WordQueue;
 import com.vinberts.vinscraper.scraping.curl.CurlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import org.json.JSONObject;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
-
-import static com.vinberts.vinscraper.scraping.ScrapingConstants.DEFINITION_SELECTOR;
 
 /**
  *
@@ -31,14 +30,13 @@ public class WordQueueProcessingCurl extends WordLoader implements Runnable {
                 Thread.currentThread().getName() +
                 " for word queue of size " + wordQueueList.size());
         for (WordQueue queue: wordQueueList) {
-            String link = getFullUrlFromLink(queue.getUrl());
-            Document document = CurlUtils.getHtmlViaCurl(link);
-            Element defDiv = document.select(DEFINITION_SELECTOR).first();
-            if (Objects.isNull(defDiv)) {
+            String encodedWord = URLEncoder.encode(queue.getWord(), StandardCharsets.UTF_8);
+            JSONObject defObj = CurlUtils.getJsonViaCurl("https://api.urbandictionary.com/v0/define?term=" + encodedWord);
+            if (Objects.isNull(defObj)) {
                 log.warn(queue.getWord() + " could not be loaded or errored out");
                 DatabaseHelper.updateWordQueueProcess(queue, false);
             } else {
-                DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defDiv));
+                DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defObj));
             }
             try {
                 Thread.sleep(RandomUtils.nextInt(300,400));

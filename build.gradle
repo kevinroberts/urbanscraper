@@ -32,6 +32,7 @@ classes {
 }
 
 dependencies {
+    compile group: 'org.json', name: 'json', version: '20231013'
     compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.0.0-alpha-6'
     compile group: 'commons-io', name: 'commons-io', version: '2.7'
     compile group: 'org.hibernate', name: 'hibernate-core', version: '5.4.20.Final'

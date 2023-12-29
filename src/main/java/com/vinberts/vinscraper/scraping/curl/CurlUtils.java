@@ -1,6 +1,7 @@
 package com.vinberts.vinscraper.scraping.curl;
 
 import com.roxstudio.utils.CUrl;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -22,10 +23,20 @@ public class CurlUtils {
         return Jsoup.parse(html);
     };
 
+    private static final CUrl.Resolver<JSONObject> jsonObjectResolver = (httpCode, responseBody) -> {
+        String jsonText = new String(responseBody, StandardCharsets.UTF_8);
+        return new JSONObject(jsonText);
+    };
+
 
     public static Document getHtmlViaCurl(String url) {
         CUrl cUrl = new CUrl(url).opt("-A", USER_AGENT_WINDOWS).opt("-L");
         return cUrl.exec(htmlResolver, null);
+    }
+
+    public static JSONObject getJsonViaCurl(String url) {
+        CUrl cUrl = new CUrl(url).opt("-A", USER_AGENT_WINDOWS).opt("-L");
+        return cUrl.exec(jsonObjectResolver, null);
     }
 
 }
