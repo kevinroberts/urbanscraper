@@ -5,6 +5,7 @@ import com.vinberts.vinscraper.database.models.WordQueue;
 import com.vinberts.vinscraper.scraping.curl.CurlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
@@ -19,9 +20,11 @@ import java.util.Objects;
 public class WordQueueProcessingCurl extends WordLoader implements Runnable {
 
     private final List<WordQueue> wordQueueList;
+    private boolean isReRun = false;
 
-    public WordQueueProcessingCurl(final List<WordQueue> wordQueueList) {
+    public WordQueueProcessingCurl(List<WordQueue> wordQueueList, boolean isReRun) {
         this.wordQueueList = wordQueueList;
+        this.isReRun = isReRun;
     }
 
     @Override
@@ -34,9 +37,15 @@ public class WordQueueProcessingCurl extends WordLoader implements Runnable {
             JSONObject defObj = CurlUtils.getJsonViaCurl("https://api.urbandictionary.com/v0/define?term=" + encodedWord);
             if (Objects.isNull(defObj)) {
                 log.warn(queue.getWord() + " could not be loaded or errored out");
-                DatabaseHelper.updateWordQueueProcess(queue, false);
+                DatabaseHelper.updateWordQueueProcess(queue, false, isReRun);
             } else {
-                DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defObj));
+                JSONArray defList = defObj.getJSONArray("list");
+                // Don't re-run for single definition or empty list
+                if (isReRun && (defList.length() == 1 || defList.isEmpty())) {
+                    DatabaseHelper.updateWordQueueProcess(queue, true, isReRun);
+                } else {
+                    DatabaseHelper.updateWordQueueProcess(queue, attemptSaveNewDefinition(defObj), isReRun);
+                }
             }
             try {
                 Thread.sleep(RandomUtils.nextInt(300,400));

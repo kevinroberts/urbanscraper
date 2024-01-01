@@ -64,6 +64,13 @@ public class Main {
                 .numberOfArgs(2)
                 .argName("NUMBER_TO_PROCESS NUMBER_OF_THREADS")
                 .build();
+        Option reRun = Option.builder("r")
+                .longOpt("rerun") // can be optionally triggered by passing --queue
+                .desc("start re-run processing of words with specified limit argument NUMBER_TO_PROCESS NUMBER_OF_THREADS")
+                .hasArgs()
+                .numberOfArgs(2)
+                .argName("NUMBER_TO_PROCESS NUMBER_OF_THREADS")
+                .build();
         Option days = Option.builder("d")
                 .longOpt("days")
                 .desc("start processing of new words by date, NUMBER_OF_DAYS START_DATE (Start date format yyyy-mm-dd - default will use current date)")
@@ -76,6 +83,7 @@ public class Main {
         options.addOption(version);
         options.addOption(alpha);
         options.addOption(queue);
+        options.addOption(reRun);
         options.addOption(days);
         // create the parser
         CommandLineParser parser = new DefaultParser();
@@ -113,7 +121,22 @@ public class Main {
                         ConsoleUtil.info("Threads specified greater than max threshold, setting to max value of 6");
                         numberOfThreads = 6;
                     }
-                    processQueues(numberOfItems, numberOfThreads);
+                    processQueues(numberOfItems, numberOfThreads, false);
+                } else {
+                    throw new ParseException("Invalid number of items / threads specified, must be an integer value");
+                }
+            } else if (line.hasOption(reRun.getOpt())) {
+                String numberOfItemsStr = line.getOptionValues(reRun.getOpt())[0];
+                String numberOfThreadsStr = line.getOptionValues(reRun.getOpt())[1];
+                Integer numberOfItems = Ints.tryParse(numberOfItemsStr);
+                Integer numberOfThreads = Ints.tryParse(numberOfThreadsStr);
+                if (Objects.nonNull(numberOfItems) && Objects.nonNull(numberOfThreads)) {
+                    ConsoleUtil.info("RE-Running unprocessed queue for number of items: " + numberOfItemsStr + " with number of threads " + numberOfThreads);
+                    if (numberOfThreads < 0 || numberOfThreads > 6) {
+                        ConsoleUtil.info("Threads specified greater than max threshold, setting to max value of 6");
+                        numberOfThreads = 6;
+                    }
+                    processQueues(numberOfItems, numberOfThreads, true);
                 } else {
                     throw new ParseException("Invalid number of items / threads specified, must be an integer value");
                 }
@@ -165,17 +188,22 @@ public class Main {
         }
     }
 
-    private static void processQueues(int limit, int threads) {
-        List<WordQueue> queueList = DatabaseHelper.getUnprocessedWordQueue(limit);
-        if (queueList.size() > 0) {
-            DatabaseHelper.markWordQueueAsInProcess(limit);
+    private static void processQueues(int limit, int threads, boolean isReRun) {
+        List<WordQueue> queueList = null;
+        if (isReRun) {
+            queueList = DatabaseHelper.getUnprocessedReRunWordQueue(limit);
+        } else {
+            queueList = DatabaseHelper.getUnprocessedWordQueue(limit);
+        }
+        if (!queueList.isEmpty()) {
+            // DatabaseHelper.markWordQueueAsInProcess(limit);
             // split list into equal parts
             int splitSize = queueList.size() / threads;
             List<List<WordQueue>> subSets = Lists.partition(queueList, splitSize);
 
             for (int i = 0; i < threads; i++) {
                 Thread thread = new Thread(
-                        new WordQueueProcessingCurl(subSets.get(i)));
+                        new WordQueueProcessingCurl(subSets.get(i), isReRun));
                 thread.start();
             }
         } else {

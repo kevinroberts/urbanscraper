@@ -41,10 +41,10 @@ public class WordQueueProcessingWebDriver extends WordLoader implements Runnable
                 driver.navigate().to(link);
                 List<WebElement> defPanels = driver.findElements(By.className(MAIN_UL_SELECTOR));
                 attemptSaveNewDefinition(defPanels.get(0));
-                DatabaseHelper.updateWordQueueProcess(queue, true);
+                DatabaseHelper.updateWordQueueProcess(queue, true, false);
             } catch (WebDriverException ue) {
                 log.error("Exception reached trying to load word in queue " + queue.getWord(), ue);
-                DatabaseHelper.updateWordQueueProcess(queue, false);
+                DatabaseHelper.updateWordQueueProcess(queue, false, false);
                 try {
                     Thread.sleep(800);
                 } catch (InterruptedException e2) {

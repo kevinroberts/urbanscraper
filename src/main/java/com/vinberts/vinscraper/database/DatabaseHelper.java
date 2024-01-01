@@ -81,6 +81,22 @@ public class DatabaseHelper {
         }
     }
 
+    public static List<WordQueue> getUnprocessedReRunWordQueue(int limit) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        EntityManager manager = session.getEntityManagerFactory().createEntityManager();
+
+        String hql = "SELECT q FROM WordQueue q WHERE q.reRun = false and q.beingProcessed = false and q.hasError = false order by q.dateAdded ASC";
+        Query query = manager.createQuery(hql);
+        query.setMaxResults(limit);
+        List results = query.getResultList();
+        session.close();
+        if (results.isEmpty()) {
+            return Lists.newArrayList();
+        } else {
+            return results;
+        }
+    }
+
     public static boolean markWordQueueAsInProcess(int limit) {
         Transaction transaction = null;
         try {
@@ -137,14 +153,20 @@ public class DatabaseHelper {
         }
     }
 
-    public static boolean updateWordQueueProcess(WordQueue wordQueue, boolean processSuccessful) {
+    public static boolean updateWordQueueProcess(WordQueue wordQueue, boolean processSuccessful, boolean isReRun) {
         EntityManager manager = null;
         try {
             Session session = HibernateUtil.getSessionFactory().openSession();
             manager = session.getEntityManagerFactory().createEntityManager();
             manager.getTransaction().begin();
-            String hql = "UPDATE WordQueue set processed = :process, hasError = :hasError, beingProcessed = false " +
-                    "WHERE uuid = :id";
+            String hql;
+            if (isReRun) {
+                hql = "UPDATE WordQueue set reRun = :process, hasError = :hasError, beingProcessed = false " +
+                        "WHERE uuid = :id";
+            } else {
+                hql = "UPDATE WordQueue set processed = :process, hasError = :hasError, beingProcessed = false " +
+                        "WHERE uuid = :id";
+            }
             Query query = manager.createQuery(hql);
             query.setParameter("process", processSuccessful);
             if (!processSuccessful) {

@@ -40,6 +40,9 @@ public class WordQueue {
     @Column(columnDefinition = "boolean", name = "being_processed")
     private Boolean beingProcessed;
 
+    @Column(columnDefinition = "boolean", name = "re_run")
+    private Boolean reRun;
+
     @Column(name = "date_added", nullable = false, columnDefinition = "timestamp without time zone NOT NULL DEFAULT now()")
     private LocalDateTime dateAdded;
 }

@@ -32,6 +32,7 @@ public abstract class WordLoader {
 
     protected boolean attemptSaveNewDefinition(JSONObject definitions) {
         JSONArray defList = definitions.getJSONArray("list");
+        boolean success = false;
         for (int i = 0; i < defList.length(); i++) {
             JSONObject defObject = defList.getJSONObject(i);
             String definitionId = defObject.getBigInteger("defid").toString();
@@ -61,14 +62,16 @@ public abstract class WordLoader {
                 if (DatabaseHelper.insertNewDefinition(definition)) {
                     log.info(Thread.currentThread().getName() +
                             ": Stored new definition for word "
-                            + definition.getWord());
-                    return true;
+                            + definition.getWord() + " defId: " + definitionId);
+                    success = true;
                 } else {
-                    return false;
+                    log.warn(Thread.currentThread().getName() +
+                            ": Database error storing "
+                            + definition.getWord());
                 }
             }
         }
-        return false;
+        return success;
     }
     /**
      * attemptSaveNewDefinition
